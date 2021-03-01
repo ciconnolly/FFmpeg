@@ -3547,6 +3547,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
                     av_log(s->avctx, AV_LOG_ERROR, "illegal MB type\n");
                 }
 		
+#if 0
 		if (0 && s->pict_type == AV_PICTURE_TYPE_P) {
 		  if (abs(motion_x) > 2 || abs(motion_y) > 2) {
 		    foo = (foo + 1) % 4;
@@ -3555,7 +3556,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
 		    printf("       in encode_thread() motion_x, motion_y = [%d, %d]\n", motion_x, motion_y);
 		  }
 		}
-		
+#endif		
                 encode_mb(s, motion_x, motion_y);
 
                 // RAL: Update last macroblock type
