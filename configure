@@ -1692,6 +1692,7 @@ EXAMPLE_LIST="
     scaling_video_example
     transcode_aac_example
     transcoding_example
+    mytranscoding_example
     vaapi_encode_example
     vaapi_transcode_example
 "

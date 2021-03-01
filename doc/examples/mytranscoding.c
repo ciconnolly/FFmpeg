@@ -420,7 +420,7 @@ static int encode_write_frame(AVFrame *filt_frame, unsigned int stream_index)
     int ret;
     AVPacket enc_pkt;
 
-    printf("encode_write_frame\n");
+    printf("==> encode_write_frame\n");
     av_log(NULL, AV_LOG_INFO, "Encoding frame\n");
     /* encode filtered frame */
     enc_pkt.data = NULL;
@@ -448,6 +448,7 @@ static int encode_write_frame(AVFrame *filt_frame, unsigned int stream_index)
         /* mux encoded frame */
         ret = av_interleaved_write_frame(ofmt_ctx, &enc_pkt);
     }
+    printf("<== encode_write_frame\n");
 
     return ret;
 }

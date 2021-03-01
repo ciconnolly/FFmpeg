@@ -1843,12 +1843,17 @@ static int frame_start(MpegEncContext *s)
     return 0;
 }
 
+
+/* See if this is a reasonable place to put hooks for steg. */
+
 int ff_mpv_encode_picture(AVCodecContext *avctx, AVPacket *pkt,
                           const AVFrame *pic_arg, int *got_packet)
 {
     MpegEncContext *s = avctx->priv_data;
     int i, stuffing_count, ret;
     int context_count = s->slice_context_count;
+
+    printf("==> ff_mpv_encode_picture\n");
 
     s->vbv_ignore_qmax = 0;
 
@@ -2101,6 +2106,9 @@ FF_ENABLE_DEPRECATION_WARNINGS
 
     pkt->size = s->frame_bits / 8;
     *got_packet = !!pkt->size;
+
+    printf("<== ff_mpv_encode_picture\n");
+
     return 0;
 }
 
@@ -2600,6 +2608,7 @@ static av_always_inline void encode_mb_internal(MpegEncContext *s,
     default:
         av_assert1(0);
     }
+
 }
 
 static av_always_inline void encode_mb(MpegEncContext *s, int motion_x, int motion_y)
@@ -2793,6 +2802,8 @@ static int pre_estimate_motion_thread(AVCodecContext *c, void *arg){
 static int estimate_motion_thread(AVCodecContext *c, void *arg){
     MpegEncContext *s= *(void**)arg;
 
+    printf("======> static int estimate_motion_thread\n");
+
     s->me.dia_size= s->avctx->dia_size;
     s->first_slice_line=1;
     for(s->mb_y= s->start_mb_y; s->mb_y < s->end_mb_y; s->mb_y++) {
@@ -2812,6 +2823,7 @@ static int estimate_motion_thread(AVCodecContext *c, void *arg){
         }
         s->first_slice_line=0;
     }
+    printf("<====== static int estimate_motion_thread\n");
     return 0;
 }
 
@@ -2937,6 +2949,7 @@ int ff_mpv_reallocate_putbitbuffer(MpegEncContext *s, size_t threshold, size_t s
 }
 
 static int encode_thread(AVCodecContext *c, void *arg){
+    static int foo;
     MpegEncContext *s= *(void**)arg;
     int mb_x, mb_y, mb_y_order;
     int chr_h= 16>>s->chroma_y_shift;
@@ -3163,15 +3176,19 @@ FF_ENABLE_DEPRECATION_WARNINGS
                 }
 
                 if(mb_type&CANDIDATE_MB_TYPE_INTER){
+		    printf(">>>>> encode_thread() at CANDIDATE_MB_TYPE_INTER:\n");
                     s->mv_dir = MV_DIR_FORWARD;
                     s->mv_type = MV_TYPE_16X16;
                     s->mb_intra= 0;
                     s->mv[0][0][0] = s->p_mv_table[xy][0];
                     s->mv[0][0][1] = s->p_mv_table[xy][1];
+		    printf("     mv[0][0][:] = [%d. %d]\n", s->mv[0][0][0], s->mv[0][0][1]);
                     encode_mb_hq(s, &backup_s, &best_s, CANDIDATE_MB_TYPE_INTER, pb, pb2, tex_pb,
                                  &dmin, &next_block, s->mv[0][0][0], s->mv[0][0][1]);
+		    printf("<<<<< encode_thread() at CANDIDATE_MB_TYPE_INTER:\n");
                 }
                 if(mb_type&CANDIDATE_MB_TYPE_INTER_I){
+		    printf(">>>>> encode_thread() at CANDIDATE_MB_TYPE_INTER_I:\n");
                     s->mv_dir = MV_DIR_FORWARD;
                     s->mv_type = MV_TYPE_FIELD;
                     s->mb_intra= 0;
@@ -3179,9 +3196,11 @@ FF_ENABLE_DEPRECATION_WARNINGS
                         j= s->field_select[0][i] = s->p_field_select_table[i][xy];
                         s->mv[0][i][0] = s->p_field_mv_table[i][j][xy][0];
                         s->mv[0][i][1] = s->p_field_mv_table[i][j][xy][1];
+			printf("     mv[0][%d][:] = [%d. %d]\n", i, s->mv[0][0][0], s->mv[0][0][1]);
                     }
                     encode_mb_hq(s, &backup_s, &best_s, CANDIDATE_MB_TYPE_INTER_I, pb, pb2, tex_pb,
                                  &dmin, &next_block, 0, 0);
+		    printf("<<<<< encode_thread() at CANDIDATE_MB_TYPE_INTER_I:\n");
                 }
                 if(mb_type&CANDIDATE_MB_TYPE_SKIPPED){
                     s->mv_dir = MV_DIR_FORWARD;
@@ -3527,7 +3546,16 @@ FF_ENABLE_DEPRECATION_WARNINGS
                 default:
                     av_log(s->avctx, AV_LOG_ERROR, "illegal MB type\n");
                 }
-
+		
+		if (0 && s->pict_type == AV_PICTURE_TYPE_P) {
+		  if (abs(motion_x) > 2 || abs(motion_y) > 2) {
+		    foo = (foo + 1) % 4;
+		    motion_x = motion_x + ( foo - 2 );
+		    motion_y = motion_y + ( foo - 1 );
+		    printf("       in encode_thread() motion_x, motion_y = [%d, %d]\n", motion_x, motion_y);
+		  }
+		}
+		
                 encode_mb(s, motion_x, motion_y);
 
                 // RAL: Update last macroblock type
@@ -3691,6 +3719,7 @@ static int encode_picture(MpegEncContext *s, int picture_number)
     int bits;
     int context_count = s->slice_context_count;
 
+    printf("====> static int encode_picture\n");
     s->picture_number = picture_number;
 
     /* Reset the average MB variance */
@@ -3755,7 +3784,7 @@ static int encode_picture(MpegEncContext *s, int picture_number)
                 s->avctx->execute(s->avctx, pre_estimate_motion_thread, &s->thread_context[0], NULL, context_count, sizeof(void*));
             }
         }
-
+	
         s->avctx->execute(s->avctx, estimate_motion_thread, &s->thread_context[0], NULL, context_count, sizeof(void*));
     }else /* if(s->pict_type == AV_PICTURE_TYPE_I) */{
         /* I-Frame */
@@ -3966,6 +3995,9 @@ static int encode_picture(MpegEncContext *s, int picture_number)
         merge_context_after_encode(s, s->thread_context[i]);
     }
     emms_c();
+
+    printf("<==== static int encode_picture\n");
+
     return 0;
 }
 

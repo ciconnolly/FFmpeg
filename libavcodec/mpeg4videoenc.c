@@ -856,6 +856,7 @@ void ff_mpeg4_encode_mb(MpegEncContext *s, int16_t block[6][64],
         if (s->ac_pred)
             restore_ac_coeffs(s, block, dir, scan_table, zigzag_last_index);
     }
+
 }
 
 /**

@@ -885,6 +885,7 @@ static inline int get_penalty_factor(int lambda, int lambda2, int type){
 void ff_estimate_p_frame_motion(MpegEncContext * s,
                                 int mb_x, int mb_y)
 {
+  static int foo;
     MotionEstContext * const c= &s->me;
     uint8_t *pix, *ppix;
     int sum, mx = 0, my = 0, dmin = 0;
@@ -958,6 +959,16 @@ void ff_estimate_p_frame_motion(MpegEncContext * s,
         dmin = ff_epzs_motion_search(s, &mx, &my, P, 0, 0, s->p_mv_table, (1<<16)>>shift, 0, 16);
     }
 
+
+    /* What if we tweak mx and my here? */
+    if (abs(mx) > 2 || abs(my) > 2) {
+      foo = (foo + 1) % 4;
+      mx = mx + ( foo - 2 );
+      my = my + ( foo - 1 );
+      printf("       in ff_estimate_p_frame_motion() mx, my = [%d, %d]\n", mx, my);
+    }
+
+    
     /* At this point (mx,my) are full-pell and the relative displacement */
     ppix = c->ref[0][0] + (my * s->linesize) + mx;
 
