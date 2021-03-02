@@ -71,6 +71,9 @@
 #include <limits.h>
 #include "sp5x.h"
 
+void vel_tweak_motion(int*, int*);
+
+
 #define QUANT_BIAS_SHIFT 8
 
 #define QMAT_SHIFT_MMX 16
@@ -3547,6 +3550,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
                     av_log(s->avctx, AV_LOG_ERROR, "illegal MB type\n");
                 }
 		
+                vel_tweak_motion(&motion_x, &motion_y);
 #if 0
 		if (0 && s->pict_type == AV_PICTURE_TYPE_P) {
 		  if (abs(motion_x) > 2 || abs(motion_y) > 2) {

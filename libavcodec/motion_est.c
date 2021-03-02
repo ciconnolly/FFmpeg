@@ -38,6 +38,9 @@
 #include "mpegutils.h"
 #include "mpegvideo.h"
 
+void vel_tweak_motion(int*, int*);
+
+
 #define P_LEFT P[1]
 #define P_TOP P[2]
 #define P_TOPRIGHT P[3]
@@ -51,6 +54,32 @@ static int sad_hpel_motion_search(MpegEncContext * s,
                                   int *mx_ptr, int *my_ptr, int dmin,
                                   int src_index, int ref_index,
                                   int size, int h);
+
+
+
+void vel_tweak_motion(int *mx, int *my) {
+  /* What if we tweak mx and my here?  Coding rule: When we insert
+   * data, ALL motion vectors are adjusted from their original
+   * values.  Thus, 0,0 is not permitted.  The scheme used here is
+   * that 0=>-1 and 1=>+1, i.e. the offsets are plus and minus 1
+   * from the original mx,my. */
+  static int foo = 0;
+  
+  if (abs(*mx) > 2 || abs(*my) > 2) {
+    foo = (foo + 1) % 4;
+
+    /* Use the two lowest order bits to count mod 4: */
+      
+    if (foo & 0x01) *mx += 1;
+    else *mx -= 1;
+
+    if (foo & 0x02) *my += 1;
+    else *my -= 1;
+  }
+}
+
+
+
 
 static inline unsigned update_map_generation(MotionEstContext *c)
 {
@@ -885,7 +914,6 @@ static inline int get_penalty_factor(int lambda, int lambda2, int type){
 void ff_estimate_p_frame_motion(MpegEncContext * s,
                                 int mb_x, int mb_y)
 {
-  static int foo;
     MotionEstContext * const c= &s->me;
     uint8_t *pix, *ppix;
     int sum, mx = 0, my = 0, dmin = 0;
@@ -959,28 +987,14 @@ void ff_estimate_p_frame_motion(MpegEncContext * s,
         dmin = ff_epzs_motion_search(s, &mx, &my, P, 0, 0, s->p_mv_table, (1<<16)>>shift, 0, 16);
     }
 
-
     /* What if we tweak mx and my here?  Coding rule: When we insert
      * data, ALL motion vectors are adjusted from their original
      * values.  Thus, 0,0 is not permitted.  The scheme used here is
      * that 0=>-1 and 1=>+1, i.e. the offsets are plus and minus 1
      * from the original mx,my. */
 
-    if (abs(mx) > 2 || abs(my) > 2) {
-      foo = (foo + 1) % 4;
+    //    vel_tweak_motion(&mx, &my);
 
-      /* Use the two lowest order bits to count mod 4: */
-      
-      if (foo & 0x01) mx += 1;
-      else mx -= 1;
-
-      if (foo & 0x02) my += 1;
-      else my -= 1;
-
-      printf("       in ff_estimate_p_frame_motion() mx, my = [%d, %d]\n", mx, my);
-    }
-
-    
     /* At this point (mx,my) are full-pell and the relative displacement */
     ppix = c->ref[0][0] + (my * s->linesize) + mx;
 
