@@ -3551,6 +3551,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
 		
 		
 #if 0
+#define RADIUS 8
+                
 		//    vel_tweak_motion( (s->mb_y*s->mb_stride) + s->mb_x, &mx, &my, 2);
 
 		// For sure, mb_x and mb_y are x and y coordinates in
@@ -3559,7 +3561,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
 		// printf("[x=%d, y=%d]\n", s->mb_x, s->mb_y);
 		int tweak, tweak_index;
 		tweak_index = (s->mb_y*s->mb_stride) + s->mb_x;
-		tweak = vel_tweak_motion(  tweak_index, &motion_x, &motion_y, 4);
+		tweak = vel_tweak_motion_1(  tweak_index, &motion_x, &motion_y, RADIUS );
                 if ( tweak >= 0 )
 		  printf("[mb_x=%d, mb_y=%d, stride=%d] = index %d, value=%d\n", s->mb_x, s->mb_y, s->mb_stride, tweak_index, tweak);
 

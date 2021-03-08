@@ -969,7 +969,7 @@ void ff_estimate_p_frame_motion(MpegEncContext * s,
      * from the original mx,my. */
 
     // Motion vectors don't seem to be conserved here:
-#if 0
+#if 1
 #define RADIUS 8
     int tweak, tweak_index;
     tweak_index = (mb_y * s->mb_stride) + mb_x;

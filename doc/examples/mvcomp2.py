@@ -62,8 +62,39 @@ def res_decode(dx,dy):
 
     return bit1 | bit0
 
-if len(sys.argv) < 3:
-    print("Usage: {} <cover> <steg> [stride=81]".format(sys.argv[0]))
+
+
+
+def check_cover(filename, thresh=8, stride=81):
+    frameno = 0
+    k = 0
+    with open(filename, 'r') as fc:
+        for linec in fc:
+            if k == 0:
+                k += 1
+            else:
+                pc = parse_line(linec)
+                mx = pc['motion_x'] / pc['motion_scale']
+                my = pc['motion_y'] / pc['motion_scale']
+
+                mb_x = int(pc['srcx'] / 16)
+                mb_y = int(pc['srcy'] / 16)
+
+                idx = round(mb_x + (mb_y * stride))
+            
+                if pc['framenum'] != frameno:
+                    frameno = pc['framenum']
+                    print("New frame:  Frame {}".format(frameno))
+                if abs(mx) > thresh or abs(my) > thresh:
+                    print("Will modify [{},{}]=>[{},{}]=>{}".format(pc['srcx'], pc['srcy'], mb_x, mb_y, idx))
+            
+
+
+
+if len(sys.argv) < 2:
+    print("Usage: {} <cover> [<steg> [stride=81]]".format(sys.argv[0]))
+elif len(sys.argv) < 3:
+    check_cover(sys.argv[1])
 else:
     count = 0
     good_resid = 0
@@ -128,7 +159,7 @@ else:
                         mb_y = int(pc['srcy'] / 16)
 
                         idx = round(mb_x + (mb_y * stride))
-                        print("Residuals: [{},{}]=>[{},{}]=>{}] = [{},{}] => {} (vs. {})".format(pc['srcx'], pc['srcy'], mb_x, mb_y, idx, rx,ry, res_decode(rx,ry), idx&0x3))
+                        print("Residuals: ( [{},{}]=>[{},{}]=>{} ) = [{},{}] => {} (vs. {})".format(pc['srcx'], pc['srcy'], mb_x, mb_y, idx, rx,ry, res_decode(rx,ry), int(idx)&0x3))
                         good_resid += 1
                     elif rx == 0 and ry == 0:
                         count += 1
