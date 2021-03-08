@@ -13,8 +13,12 @@
  */
 
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 
+// #define BITS_TO_PRINT 1024
+#define BITS_TO_PRINT 0
 
 /*
  * This file contains Video Embedding Library (vel) bitstream
@@ -27,6 +31,7 @@ typedef struct velbs {
   int bit;                /* "active" bit counter */
   int nbits;              /* Total number of bits in message */
   int bufsize;            /* Buffer size = maximum number of message + length bytes */
+  unsigned int stride;    /* Stride for converting macroblock coords to indices. */
   unsigned char density;  /* MCU density - can be in [1,100] */
   unsigned short msgsize; /* Message size must be < bufsize*/
   unsigned char checksum; /* Header checksum */
@@ -61,3 +66,7 @@ int velbs_set_next_bit(velbs *obj, int val);
 
 int velbs_set_density(velbs *obj, int density);
 int velbs_get_density(velbs *obj);
+
+int vel_tweak_motion_0(int, int*, int*, int);
+int vel_tweak_motion_1(int, int*, int*, int);
+int vel_tweak_motion_2(int, int *, int *, int *, int);

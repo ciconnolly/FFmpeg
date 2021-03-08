@@ -71,7 +71,7 @@
 #include <limits.h>
 #include "sp5x.h"
 
-void vel_tweak_motion(int*, int*);
+#include "velbs.h"
 
 
 #define QUANT_BIAS_SHIFT 8
@@ -2952,7 +2952,6 @@ int ff_mpv_reallocate_putbitbuffer(MpegEncContext *s, size_t threshold, size_t s
 }
 
 static int encode_thread(AVCodecContext *c, void *arg){
-    static int foo;
     MpegEncContext *s= *(void**)arg;
     int mb_x, mb_y, mb_y_order;
     int chr_h= 16>>s->chroma_y_shift;
@@ -3550,17 +3549,21 @@ FF_ENABLE_DEPRECATION_WARNINGS
                     av_log(s->avctx, AV_LOG_ERROR, "illegal MB type\n");
                 }
 		
-                vel_tweak_motion(&motion_x, &motion_y);
+		
 #if 0
-		if (0 && s->pict_type == AV_PICTURE_TYPE_P) {
-		  if (abs(motion_x) > 2 || abs(motion_y) > 2) {
-		    foo = (foo + 1) % 4;
-		    motion_x = motion_x + ( foo - 2 );
-		    motion_y = motion_y + ( foo - 1 );
-		    printf("       in encode_thread() motion_x, motion_y = [%d, %d]\n", motion_x, motion_y);
-		  }
-		}
-#endif		
+		//    vel_tweak_motion( (s->mb_y*s->mb_stride) + s->mb_x, &mx, &my, 2);
+
+		// For sure, mb_x and mb_y are x and y coordinates in
+		// units of mb_width and mb_height.
+
+		// printf("[x=%d, y=%d]\n", s->mb_x, s->mb_y);
+		int tweak, tweak_index;
+		tweak_index = (s->mb_y*s->mb_stride) + s->mb_x;
+		tweak = vel_tweak_motion(  tweak_index, &motion_x, &motion_y, 4);
+                if ( tweak >= 0 )
+		  printf("[mb_x=%d, mb_y=%d, stride=%d] = index %d, value=%d\n", s->mb_x, s->mb_y, s->mb_stride, tweak_index, tweak);
+
+#endif
                 encode_mb(s, motion_x, motion_y);
 
                 // RAL: Update last macroblock type

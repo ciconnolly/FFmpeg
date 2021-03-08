@@ -1772,7 +1772,13 @@ end:
         }
     }
 
+    /*
+    if (s->pict_type == AV_PICTURE_TYPE_P)
+      printf("     [%d,%d] mx=%d, my=%d\n", s->mb_x, s->mb_y, mx,my);
+    */
+
     return SLICE_OK;
+    
 }
 
 /* As per spec, studio start code search isn't the same as the old type of start code */

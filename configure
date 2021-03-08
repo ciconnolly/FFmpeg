@@ -1679,6 +1679,7 @@ EXAMPLE_LIST="
     encode_audio_example
     encode_video_example
     extract_mvs_example
+    extract_mvs2_example
     filter_audio_example
     filtering_audio_example
     filtering_video_example

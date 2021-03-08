@@ -2,6 +2,7 @@
 /* REFER TO motion_est.c TO SEE WHERE BITS ARE INSERTED INTO THE STREAM.       */
 
 
+#include <stdio.h>
 #include "velbs.h"
 
 /*
@@ -256,3 +257,100 @@ int velbs_set_next_bit(velbs *obj, int val) {
   }
 }
 
+#define VERBOSE 0
+
+/* Tester: */
+int vel_tweak_motion_0(int index, int *mx, int *my, int thresh) {
+  /* What if we tweak mx and my here?  Coding rule: When we insert
+   * data, ALL motion vectors are adjusted from their original
+   * values.  Thus, 0,0 is not permitted.  The scheme used here is
+   * that 0=>-1 and 1=>+1, i.e. the offsets are plus and minus 1
+   * from the original mx,my. 
+   *
+   * Threshold 'thresh' allows us to limit the tweaks to large changes
+   * in the motion vector.  This improves stealth, at least in theory.
+   *
+   */
+  //  static int foo = 0;
+  int rc = -1;
+  
+  if (abs(*mx) > thresh || abs(*my) > thresh) {
+    /* Use the two lowest order bits to count mod 4: */
+      
+    if (index & 0x0001) *mx += 1;
+    else *mx -= 1;
+
+    if (index & 0x0002) *my += 1;
+    else *my -= 1;
+
+    if (VERBOSE) printf("tweaking %d: [%d,%d]\n", index, *mx, *my);
+
+    rc = index & 0x0003;
+  }
+
+  return rc;
+}
+
+
+
+
+int vel_tweak_motion_1(int index, int *mx, int *my, int thresh) {
+  /* What if we tweak mx and my here?  Coding rule: When we insert
+   * data, ALL motion vectors are adjusted from their original
+   * values.  Thus, 0,0 is not permitted.  The scheme used here is
+   * that 0=>-1 and 1=>+1, i.e. the offsets are plus and minus 1
+   * from the original mx,my. 
+   *
+   * Threshold 'thresh' allows us to limit the tweaks to large changes
+   * in the motion vector.  This improves stealth, at least in theory.
+   *
+   */
+  //  static int foo = 0;
+  int rc = -1;
+  
+  if (abs(*mx) > thresh || abs(*my) > thresh) {
+    /* Use the two lowest order bits to count mod 4: */
+      
+    if (index & 0x0001) *mx += 1;
+    if (index & 0x0002) *my += 1;
+
+    if (VERBOSE) printf("tweaking %d: [%d,%d]\n", index, *mx, *my);
+
+    rc = index & 0x0003;
+  }
+
+  return rc;
+}
+
+
+
+int vel_tweak_motion_2(int index, int *mx, int *my, int *scale, int thresh) {
+  /* What if we tweak mx and my here?  Coding rule: When we insert
+   * data, ALL motion vectors are adjusted from their original
+   * values.  Thus, 0,0 is not permitted.  The scheme used here is
+   * that 0=>-1 and 1=>+1, i.e. the offsets are plus and minus 1
+   * from the original mx,my. 
+   *
+   * Threshold 'thresh' allows us to limit the tweaks to large changes
+   * in the motion vector.  This improves stealth, at least in theory.
+   *
+   */
+  //  static int foo = 0;
+  int rc = -1;
+  
+  if (abs(*mx) > thresh || abs(*my) > thresh) {
+    /* Use the two lowest order bits to count mod 4: */
+      
+    if (index & 0x0001) {
+      // Scale everything, i.e. modulate the mv scale to encode bits:
+      *mx *= 2;
+      *scale *= 2;
+    }
+    
+    if (VERBOSE) printf("tweaking %d: [%d,%d]\n", index, *mx, *my, *scale);
+
+    rc = index & 0x0003;
+  }
+
+  return rc;
+}

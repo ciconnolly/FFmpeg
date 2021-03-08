@@ -6,11 +6,43 @@
 #
 
 import sys
+#import pandas as pd
 
+
+def parse_line_dist(l):
+    tokens = l.split(',')
+    d = {}
+    d['framenum'] = int(tokens[0])
+    d['source'] = int(tokens[1])
+
+    d['blockw'] = int(tokens[2])
+    d['blockh'] = int(tokens[3])
+
+    d['srcx'] = int(tokens[4])
+    d['srcy'] = int(tokens[5])
+
+    d['dstx'] = int(tokens[6])
+    d['dsty'] = int(tokens[7])
+
+    d['flags'] = tokens[8]
+    
+    return d
 
 def parse_line(l):
-    p = [ int(x) for x in l.split(',')[0:-1] ]
-    return p
+    tokens = l.split(',')
+    d = {}
+    d['framenum'] = int(tokens[0])
+    d['source'] = int(tokens[1])
+
+    d['blockw'] = int(tokens[2])
+    d['blockh'] = int(tokens[3])
+
+    d['motion_x'] = int(tokens[4])
+    d['motion_y'] = int(tokens[5])
+
+    d['motion_scale'] = int(tokens[6])
+    
+    return d
 
 
 def res_decode(dx,dy):
@@ -44,26 +76,26 @@ else:
                     pc = parse_line(linec)
                     ps = parse_line(lines)
 
-                    if pc[0] != ps[0]:
+                    if pc['framenum'] != ps['framenum']:
                         # print("We are now at different frame numbers: {} vs. {}".format(pc[0], ps[0]))
-                        if pc[0] < ps[0]:
-                            while pc[0] < ps[0]:
+                        if pc['framenum'] < ps['framenum']:
+                            while pc['framenum'] < ps['framenum']:
                                 linec = fc.readline()
                                 pc = parse_line(linec)
                         else:
-                            while ps[0] < ps[0]:
+                            while ps['framenum'] < ps['framenum']:
                                 lines = fs.readline()
                                 ps = parse_line(lines)
 
-                    if pc[2] != ps[2] or pc[3] != ps[3]:
-                        print("Block widths and heights differ at frame {}: {}x{} vs {}x{}".format(pc[0], pc[2], pc[3], ps[2], ps[3]))
+                    if pc['blockw'] != ps['blockw'] or pc['blockh'] != ps['blockh']:
+                        print("Block widths and heights differ at frame {}: {}x{} vs {}x{}".format(pc['framenum'], pc['blockw'], pc['blockh'], ps['blockw'], ps['blockh']))
                         exit()
 
-                    mxc = pc[6] - pc[4]
-                    myc = pc[7] - pc[5]
+                    mxc = pc['motion_x']
+                    myc = pc['motion_y']
 
-                    mxs = ps[6] - ps[4]
-                    mys = pc[7] - pc[5]
+                    mxs = ps['motion_x']
+                    mys = ps['motion_y']
 
                     rx = mxs - mxc
                     ry = mys - myc
@@ -74,7 +106,7 @@ else:
                     elif rx == 0 and ry == 0:
                         count += 1
                     else:
-                        print("Bad residuals: {} {}".format(rx,ry))
+                        # print("Bad residuals: {} {}".format(rx,ry))
                         bad_resid += 1
                 k += 1
                 

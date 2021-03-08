@@ -38,7 +38,7 @@
 #include "mpegutils.h"
 #include "mpegvideo.h"
 
-void vel_tweak_motion(int*, int*);
+#include "velbs.h"
 
 
 #define P_LEFT P[1]
@@ -54,31 +54,6 @@ static int sad_hpel_motion_search(MpegEncContext * s,
                                   int *mx_ptr, int *my_ptr, int dmin,
                                   int src_index, int ref_index,
                                   int size, int h);
-
-
-
-void vel_tweak_motion(int *mx, int *my) {
-  /* What if we tweak mx and my here?  Coding rule: When we insert
-   * data, ALL motion vectors are adjusted from their original
-   * values.  Thus, 0,0 is not permitted.  The scheme used here is
-   * that 0=>-1 and 1=>+1, i.e. the offsets are plus and minus 1
-   * from the original mx,my. */
-  static int foo = 0;
-  
-  if (abs(*mx) > 2 || abs(*my) > 2) {
-    foo = (foo + 1) % 4;
-
-    /* Use the two lowest order bits to count mod 4: */
-      
-    if (foo & 0x01) *mx += 1;
-    else *mx -= 1;
-
-    if (foo & 0x02) *my += 1;
-    else *my -= 1;
-  }
-}
-
-
 
 
 static inline unsigned update_map_generation(MotionEstContext *c)
@@ -993,8 +968,17 @@ void ff_estimate_p_frame_motion(MpegEncContext * s,
      * that 0=>-1 and 1=>+1, i.e. the offsets are plus and minus 1
      * from the original mx,my. */
 
-    //    vel_tweak_motion(&mx, &my);
+    // Motion vectors don't seem to be conserved here:
+#if 0
+#define RADIUS 8
+    int tweak, tweak_index;
+    tweak_index = (mb_y * s->mb_stride) + mb_x;
+    tweak = vel_tweak_motion_1(  tweak_index, &mx, &my, RADIUS );
+    if ( tweak >= 0 )
+      printf("[mb_x=%d, mb_y=%d, stride=%d] = index %d, value=%d\n", mb_x, mb_y, s->mb_stride, tweak_index, tweak);
+    //    vel_tweak_motion( (mb_y*s->mb_stride) + mb_x, &mx, &my, 2);
 
+#endif
     /* At this point (mx,my) are full-pell and the relative displacement */
     ppix = c->ref[0][0] + (my * s->linesize) + mx;
 
